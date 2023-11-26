@@ -137,38 +137,45 @@ def main(args):
     train_transform, test_transform = utils.get_transforms(args.backbone)
     train_loader = get_dataloader_train(args.root,'train', train_transform,args.batch_size)
     num_batches = len(train_loader)
-    val_loader = get_dataloader_train(args.root,'test', test_transform,args.batch_size)
+    val_loader = get_dataloader_train(args.root,'test', test_transform,4)
     model = utils.get_model(args)
     params      = [p for name, p in model.named_parameters() if p.requires_grad]
     params_name = [name for name, p in model.named_parameters() if p.requires_grad]
-    for name, p in model.named_parameters():
-      p.requires_grad_(False)
-    model.model.fc.requires_grad_(True)
+    if args.freeze :
+            model.requires_grad_(False)
+            model.model.fc.requires_grad_(True)
     print('  - Total {} params to training: {}'.format(len(params_name), [pn for pn in params_name]))
-    if args.optim == "Adam":
-      optimizer = torch.optim.AdamW(params, lr=args.lr, weight_decay=args.wd)
-    else:
-      optimizer = torch.optim.SGD(params, lr=args.lr,
-                                    momentum=args.momentum, weight_decay=args.wd)
-
+    optimizer = torch.optim.AdamW(params, lr=args.lr, weight_decay=args.wd)
     scheduler = utils.cosine_lr(optimizer, args.lr, args.warmup_length, args.epochs * num_batches)
-    print(f'  - Init {args.optim} with cosine learning rate scheduler {args.lr}')
-    print(f'  - Distill model from  {args.model_teacher} to {args.backbone}')
+    print(f'  - Init  with cosine learning rate scheduler {args.lr}')
+    print(f'  - Distill model from   to {args.backbone}')
     params      = [p for name, p in model.named_parameters() if p.requires_grad]
     params_name = [name for name, p in model.named_parameters() if p.requires_grad]
     print('  - Total {} params to training: {}'.format(len(params_name), [pn for pn in params_name]))
     cross = torch.nn.CrossEntropyLoss()
 
-    # state_dict = torch.load('backup/best_8.pt')
+    # state_dict = torch.load('backup/head_model.pt')
     # model.load_state_dict(state_dict)
-    for epoch in range(args.epochs):
+
+    for epoch in range(0,args.epochs):
         model.train()
         iter_train = iter(train_loader)
-        
+        # acc_val = val(val_loader,model)
+
         if args.freeze :
             model.requires_grad_(False)
             model.model.fc.requires_grad_(True)
         count = 0
+        # acc_val = val(val_loader,model)
+
+        acc_val = val(val_loader,model)
+        # acc_train = val(train_loader,model,type='train')
+        
+        if acc_val > max_acc:
+                    os.makedirs(args.backup_fol, exist_ok=True)
+                    torch.save(model.state_dict(),f"{args.backup_fol}/best_{epoch}.pt")
+                    max_acc = acc_val
+
         for i in tqdm(train_loader):
             step = count + epoch * num_batches
             count+=1
@@ -182,15 +189,7 @@ def main(args):
             
             loss.backward()
             optimizer.step()
-            print(f"EPOCH {epoch}, Loss {loss}")
-
-        acc_val = val(val_loader,model)
-        # acc_train = val(train_loader,model,type='train')
-        
-        if acc_val > max_acc:
-                    os.makedirs(args.backup_fol, exist_ok=True)
-                    torch.save(model.state_dict(),f"{args.backup_fol}/best_{epoch}.pt")
-                    max_acc = acc_val
+            print(f"EPOCH {epoch}, Loss {loss} max_acc {max_acc}")
         log_file.write(f"EPOCH {epoch}, Loss {loss} Acc_val {acc_val}  Best_acc {max_acc}"+'\n')
 if __name__ == '__main__':
     args = parse_arguments()

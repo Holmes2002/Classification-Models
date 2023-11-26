@@ -207,23 +207,31 @@ def get_pretrained_TinyViT(num_classes):
     model2 = WarpModule(model)
     
     return model2
+def get_pretrained_dinov2(num_classes):
+    model = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitb14')
+    model.fc = torch.nn.Linear(768, num_classes)
+    model2 = WarpModule(model)
+    
+    return model2
+
 def get_model(args):
+    device = 'cuda'
     if args.backbone == 'resnet':
-      model = utils.get_pretrained_resnet(num_classes = args.num_classes).to(device)
+      model = get_pretrained_resnet(num_classes = args.num_classes).to(device)
     elif args.backbone == 'deit':
-      model = utils.get_pretrained_deit(num_classes = args.num_classes).to(device)
+      model = get_pretrained_deit(num_classes = args.num_classes).to(device)
     elif args.backbone == 'pit':
-      model = utils.get_pretrained_pit(num_classes = args.num_classes).to(device)
+      model = get_pretrained_pit(num_classes = args.num_classes).to(device)
     elif args.backbone == 'LeVit':
-      model = utils.get_pretrained_LeVit(num_classes = args.num_classes).to(device)
+      model = get_pretrained_LeVit(num_classes = args.num_classes).to(device)
     elif args.backbone == 'SepViT':
-      model = utils.get_pretrained_SepViT(num_classes = args.num_classes).to(device)
+      model = get_pretrained_SepViT(num_classes = args.num_classes).to(device)
     elif args.backbone == 'dino':
-      model = utils.get_pretrained_dino(num_classes = args.num_classes).to(device)
+      model = get_pretrained_dino(num_classes = args.num_classes).to(device)
     elif args.backbone == 'dinov2':
-      model = utils.get_pretrained_dinov2(num_classes = args.num_classes).to(device)
+      model = get_pretrained_dinov2(num_classes = args.num_classes).to(device)
     elif args.backbone == 'TinyVit':
-      model = utils.get_pretrained_TinyVit(num_classes = args.num_classes).to(device)
+      model = get_pretrained_TinyVit(num_classes = args.num_classes).to(device)
     else:
-      model = utils.get_pretrained_unicom().to(device)
+      model = get_pretrained_unicom().to(device)
     return model

@@ -16,25 +16,33 @@ class SampleDataset(torch.utils.data.Dataset):
         self.type = type
         self.list_imgs = []
         self.list_labels = []
-        self.classes = ["Male","Female"]
-        for fol in os.listdir(f'{self.root}/{type}'):
-            for file in os.listdir(f'{self.root}/{type}/{fol}'):
-                if file in ['toc-dai-cho-nam-dap-xu.png', 'kieu-toc-nam-dai-18.jpeg', 'csfdfsd.png', 'toc-bui-nam-15.png']:
-                    continue
-                if file in ['fgffgdgf (3).png', 'fgffgdgf (2).png', 'fgffgdgf (1).png', 'dffsdsfd (1).jpg', 'fgffgdgf (7).png', 'fgffgdgf (34).jpg', 'csfdfsd.png', 'vvcxcxvvcx (15).jpg', 'sfddfsfsd (4).png', 'cxvvcxvcxxcv (3).png', 'cxvvcxvcxxcv (5).png', 'cxvvcxvcxxcv (6).png', 'cvcvc (4).png', '000219.jpg', 'cxvvcxvcxxcv (7).png', 'fgffgdgf (14).jpg', 'cxvvcxvcxxcv (65).jpg', 'cxvvcxvcxxcv (1).png', 'sfddfsfsd (5).png', 'cxvvcxvcxxcv (2).png', 'sfdfdssfdsfd (3).png', 'vvcxcxvvcx (3).png', 'fdsfdsdsfsfd (74).jpg', '000039.jpg', 'xvcvcxcvx (59).jpg', 'cvcvc (3).png', 'cxvvcxvcxxcv (52).jpg', 'cvcvc (2).png', 'vvcxcxvvcx (1).png', 'fdfsdvccvc (141).jpg', 'cxvvcxvcxxcv (4).png']:
-                    continue
-                self.list_imgs.append(f'{self.root}/{type}/{fol}/{file}')
-                self.list_labels.append(self.classes.index(fol))
+        self.classes = open('labels.txt', 'r', encoding = 'utf-8').read().splitlines()
+        import glob
 
+        self.root = "/data/disk1/congvu/Face_Attr/Age_Prediction/Classification-Models/OCR_dataset"
+        if type == 'train':
+                file = open('val.txt','r').read().splitlines()
+                for line in file:
+                            img, label = line.split("| ")
+                            self.list_imgs.append(img) 
+                            self.list_labels.append(int(label))
+        else:
+            file = open('val.txt','r').read().splitlines()
+            for line in file:
+                            img, label = line.split("| ")
+                            self.list_imgs.append(img) 
+                            self.list_labels.append(int(label))
 
-      
     
 
     def __len__(self):
         return len(self.list_imgs)
 
     def __getitem__(self, idx):
-        img=Image.open(self.list_imgs[idx])
+        if self.type == 'train':
+            img=Image.open(self.list_imgs[idx])
+        else:
+            img=Image.open(self.list_imgs[idx]).convert("RGB")
         if self.trans:
           img = self.trans(img)
         label=self.list_labels[idx]

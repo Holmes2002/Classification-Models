@@ -212,7 +212,7 @@ def main(args):
     model_teacher.eval()
     for name, p in model_teacher.named_parameters():
       p.requires_grad_(False)
-    for epoch in range(4,args.epochs):
+    for epoch in range(0,args.epochs):
         model_student.train()
         iter_train = iter(train_loader)
         acc_val = val(val_loader,model_student)
