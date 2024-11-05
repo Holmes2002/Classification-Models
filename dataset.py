@@ -19,7 +19,7 @@ class SampleDataset(torch.utils.data.Dataset):
         self.classes = open('labels.txt', 'r', encoding = 'utf-8').read().splitlines()
         import glob
 
-        self.root = "/data/disk1/congvu/Face_Attr/Age_Prediction/Classification-Models/OCR_dataset"
+        self.root = ""
         if type == 'train':
                 file = open('val.txt','r').read().splitlines()
                 for line in file:
